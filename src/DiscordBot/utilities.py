@@ -1,12 +1,24 @@
 # Helpful functions for the discord bot
 
+from typing import Any
+
 import discord
 import requests
 from discord.ext.commands import context
-from typing import Any
+
 import src.DiscordBot.discordBot
-from src.SQLServer.modelManager import is_model_logged, log_model
 from src.SQLServer.gameManager import get_log_channel_id
+from src.SQLServer.modelManager import is_model_logged, log_model
+
+
+# Checks if a guild exists
+async def does_guild_exist(guild_id: str, discord_client: discord.Client) -> bool:
+    try:
+        await discord_client.fetch_guild(int(guild_id))
+    except discord.errors.Forbidden:
+        return False
+
+    return True
 
 
 # Used by handle_prompt, ensures a sent message is a proper response to the prompt sent
@@ -16,7 +28,7 @@ def prompt_check(message_data: dict[str, Any], ctx: context) -> bool:
 
 # Returns the appropriate channel(s) for a given place
 def get_logging_channels(guild_id: str) -> tuple[bool, str]:
-    retrieve_success, log_id = get_log_channel_id(guild_id, True)
+    retrieve_success, log_id = get_log_channel_id(guild_id, True, False)
 
     if retrieve_success:
         return True, log_id
@@ -30,7 +42,9 @@ async def handle_prompt(prompts: list[str], message_data: dict[str, Any]) -> lis
 
     for prompt in prompts:
         await message_data["send message"](prompt)
-        response_message_object = await message_data["discord_client"].wait_for("message", check=lambda ctx: prompt_check(message_data, ctx))
+        response_message_object = await message_data["discord_client"].wait_for("message",
+                                                                                check=lambda ctx: prompt_check(
+                                                                                    message_data, ctx))
         responses.append(response_message_object.content)
 
     return responses
@@ -76,9 +90,11 @@ def queue_model_logging_message(guild_id: str, model_info: dict) -> bool:
 
 
 # Adds a script log message to the queue
-def queue_script_logging_message(guild_id: str, place_details: dict[str, Any], job_id: str, script_source: str, roblox_user_id: int, roblox_username: str) -> bool:
+def queue_script_logging_message(guild_id: str, place_details: dict[str, Any], job_id: str, script_source: str,
+                                 roblox_user_id: int, roblox_username: str) -> bool:
     channel_id = get_logging_channels(guild_id)
-    embed_success, message_dictionary = generate_script_logging_dictionary(place_details, job_id, script_source, roblox_user_id, roblox_username)
+    embed_success, message_dictionary = generate_script_logging_dictionary(place_details, job_id, script_source,
+                                                                           roblox_user_id, roblox_username)
 
     if embed_success:
         src.DiscordBot.discordBot.message_queue.put([channel_id, message_dictionary])
@@ -121,7 +137,8 @@ def generate_model_logging_dictionary(model_info: dict, download_link: str) -> t
     embed.set_thumbnail(url=model_info["thumbnail_url"])
 
     embed.add_field(name="Name", value=model_info["name"], inline=False)
-    embed.add_field(name="Description", value=model_info["description"][:100] if model_info["description"] != "" else "None", inline=False)
+    embed.add_field(name="Description",
+                    value=model_info["description"][:100] if model_info["description"] != "" else "None", inline=False)
     embed.add_field(name="Creator", value=f"[{model_info['creator_name']}]({model_info['creator_url']})")
     embed.add_field(name="Download Link", value=download_link, inline=False)
     embed.add_field(name="Asset Link", value=model_info["asset_url"], inline=False)
@@ -130,17 +147,20 @@ def generate_model_logging_dictionary(model_info: dict, download_link: str) -> t
 
 
 # Creates and returns the embeds for a script log message
-def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, script_source: str, roblox_user_id: int, roblox_username: str) -> tuple[bool, Any]:
+def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, script_source: str, roblox_user_id: int,
+                                       roblox_username: str) -> tuple[bool, Any]:
     # The threshold for whether or not the script source is included in the embed or a separate file is 500
     requires_file_for_script = len(script_source) >= 500
 
     try:
         embed = discord.Embed(title="typhon", colour=discord.Colour(0x9013fe), description="script logged!\n\n** **")
 
-        embed.set_image(url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}&width=768&height=432&format=png")
+        embed.set_image(
+            url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}&width=768&height=432&format=png")
         embed.set_footer(text="typhon script logger")
 
-        embed.add_field(name="game", value=f"https://www.roblox.com/games/{str(game_data['rootPlaceId'])}/", inline=True)
+        embed.add_field(name="game", value=f"https://www.roblox.com/games/{str(game_data['rootPlaceId'])}/",
+                        inline=True)
         embed.add_field(name="executor name", value=roblox_username, inline=True)
         embed.add_field(name="executor id", value=str(roblox_user_id), inline=True)
         if not requires_file_for_script:

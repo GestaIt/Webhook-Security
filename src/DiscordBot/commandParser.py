@@ -1,9 +1,13 @@
-import discord
-import os
 import json
+import os
 
-from src.SQLServer.whitelistManager import whitelist_discord, is_discord_whitelisted, remove_discord_whitelist
-from src.SQLServer.linkManager import create_link, get_linked_guild
+import discord
+
+from src.DiscordBot.prompts import prompts
+from src.DiscordBot.utilities import handle_prompt
+from src.SQLServer.whitelistManager import whitelist_discord, is_discord_whitelisted,\
+    remove_discord_whitelist, get_owner_guild
+from src.WebServer.linker import create_api_key
 
 working_directory = os.getenv("working directory", os.getcwd())
 
@@ -14,7 +18,6 @@ with open(f"{working_directory}/config.json", "r") as config:
 no_mentions_allowed = discord.AllowedMentions(everyone=False, users=False, roles=False)
 
 
-# Sends a list of commands to the original channel
 async def _help(message_data: dict[str]) -> None:
     commands_string = ""
 
@@ -35,12 +38,12 @@ async def _whitelist_guild(message_data: dict[str]) -> None:
 
     if guild_id.isdigit():
         if is_discord_whitelisted(guild_id) is not True:
-            whitelist_success = whitelist_discord(guild_id)
+            whitelist_success, error_code = whitelist_discord(guild_id, str(message_data["author"].id))
 
             if whitelist_success:
                 await message_data["send message"]("Successfully whitelisted that guild!")
             else:
-                await message_data["send message"]("Failed to whitelist that guild, please message Gestalt.")
+                await message_data["send message"](error_code)
         else:
             await message_data["send message"]("That guild is already whitelisted!")
     else:
@@ -68,8 +71,38 @@ async def _remove_guild(message_data: dict[str]) -> None:
     return
 
 
+async def _get_whitelisted_guild(message_data: dict[str]) -> None:
+    fetch_success, guild_id = get_owner_guild(str(message_data["author"].id))
+
+    if fetch_success:
+        await message_data["send message"](f"The following guilds are whitelisted by you:\n\t{guild_id}")
+
+    return
+
+
 async def _create_link(message_data: dict[str]) -> None:
-    pass
+    guild_id, log_channel_id, spam_channel_id, model_channel_id = \
+        await handle_prompt(prompts["create-link"], message_data)
+
+    if guild_id.isdigit() and log_channel_id.isdigit() and spam_channel_id.isdigit() and model_channel_id.isdigit():
+        guild = message_data["discord_client"].get_guild(int(guild_id))
+
+        if guild:
+            channels_exist = (guild.get_channel(int(log_channel_id))) and \
+                             (guild.get_channel(int(spam_channel_id))) and \
+                             (guild.get_channel(int(model_channel_id)))
+
+            if channels_exist:
+                await message_data["send message"](str(create_api_key(guild_id, log_channel_id,
+                                                                      spam_channel_id, model_channel_id)))
+            else:
+                await message_data["send message"]("One or more of your channels does not belong in your specified "
+                                                   "guild!")
+        else:
+            await message_data["send message"]("It seems like I'm not in that specified guild, please invite me to"
+                                               " your server to continue!")
+    else:
+        await message_data["send message"]("One of the channel id's you specified are incorrect!")
 
     return
 
@@ -81,7 +114,7 @@ commands = {
             "description": "Whitelists the specified guild.",
             "arguments": "[Guild ID]",
             "argument amount": 1,
-            "permission snowflake": 3
+            "permission snowflake": 1
         },
     "unwhitelistguild":
         {
@@ -89,7 +122,15 @@ commands = {
             "description": "Un-whitelists the specified guild.",
             "arguments": "[Guild ID]",
             "argument amount": 1,
-            "permission snowflake": 3
+            "permission snowflake": 2
+        },
+    "getwhitelistedguilds":
+        {
+            "function": _get_whitelisted_guild,
+            "description": "Fetches all of the users whitelisted guilds.",
+            "arguments": "",
+            "argument amount": 0,
+            "permission snowflake": 1
         },
     "createlink":
         {
@@ -117,7 +158,7 @@ async def command_parser(message_data: dict[str]) -> None:
             command_data = commands[message_data["arguments"][0][len(prefix):]]
 
             if message_data["permissions"] >= command_data["permission snowflake"]:
-                if len(message_data["arguments"])-1 >= command_data["argument amount"]:
+                if len(message_data["arguments"]) - 1 >= command_data["argument amount"]:
                     await command_data["function"](message_data)
                 else:
                     await message_data["send message"](f"you did not specify the correct arguments! "

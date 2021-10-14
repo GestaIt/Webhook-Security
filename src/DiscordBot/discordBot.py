@@ -1,9 +1,11 @@
-import os
 import json
-import discord
-from discord.ext import tasks
+import os
 import queue
 from typing import Union
+
+import discord
+from discord.ext import tasks
+
 from src.DiscordBot.commandParser import command_parser
 from src.SQLServer.whitelistManager import is_discord_whitelisted
 
@@ -93,20 +95,21 @@ def run_bot():
     # Parse the users message
     @discord_client.event
     async def on_message(message):
-        message_data = {
-            "content": message.content,
-            "author": discord_client.get_guild(guild_id).get_member(message.author.id),
-            "channel": message.channel,
-            "mentions": message.mentions,
-            "send message": message.channel.send,
-            "guild": message.guild,
-            "arguments": str.split(message.content, " "),
-            "discord_client": discord_client,
-            "permissions": await check_permissions(discord_client.get_guild(guild_id).get_member(message.author.id),
-                                                   discord_client)
-        }
+        if isinstance(message.channel, discord.channel.DMChannel) or message.guild and message.guild.id == guild_id:
+            message_data = {
+                "content": message.content,
+                "author": discord_client.get_guild(guild_id).get_member(message.author.id),
+                "channel": message.channel,
+                "mentions": message.mentions,
+                "send message": message.channel.send,
+                "guild": message.guild,
+                "arguments": str.split(message.content, " "),
+                "discord_client": discord_client,
+                "permissions": await check_permissions(discord_client.get_guild(guild_id).get_member(message.author.id),
+                                                       discord_client)
+            }
 
-        await command_parser(message_data)
+            await command_parser(message_data)
 
     # Initialize all of the channels
     @discord_client.event

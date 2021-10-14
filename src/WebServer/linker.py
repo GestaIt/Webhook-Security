@@ -3,14 +3,12 @@
 from random import getrandbits
 
 from src.SQLServer.gameManager import insert_guild, get_log_channel_id
-from src.SQLServer.whitelistManager import whitelist_discord
-from src.SQLServer.linkManager import create_link
+from src.SQLServer.linkManager import create_link, get_linked_guild
 
 
 # Creates an api key.
-def create_api_key(guild_id: str, log_channel: str, model_log_channel) -> str:
-    whitelist_discord(guild_id)
-    insert_guild(guild_id, log_channel, model_log_channel)
+def create_api_key(guild_id: str, log_channel: str, spam_channel: str, model_log_channel) -> str:
+    insert_guild(guild_id, log_channel, spam_channel, model_log_channel)
 
     api_key = "%032x" % getrandbits(128)
 
@@ -19,6 +17,18 @@ def create_api_key(guild_id: str, log_channel: str, model_log_channel) -> str:
     return api_key
 
 
-# Gets information on a key.
-def get_api_key(key: str) -> tuple[bool, dict[str]]:
-    pass
+# Gets the guild linked to a key.
+def get_key_guild(key: str) -> tuple[bool, dict[str]]:
+    fetch_success, guild_id = get_linked_guild(key)
+
+    if fetch_success:
+        key_guild_information = {
+            "guild": guild_id,
+            "game_logging_channel": get_log_channel_id(guild_id, True, False),
+            "spam_logging_channel": get_log_channel_id(guild_id, True, True),
+            "model_logging_channel": get_log_channel_id(guild_id, False, False)
+        }
+
+        return True, key_guild_information
+
+    return False, {}
