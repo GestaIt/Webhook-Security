@@ -1,12 +1,12 @@
 # Json Config Files
-.json
+*.json
 
 # Database Files
-.db
-.sqlite
+*.db
+*.sqlite
 
 # IDE Files
-.idea
+*.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -122,3 +122,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.json
