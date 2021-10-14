@@ -161,3 +161,7 @@ def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, s
     except (discord.errors.HTTPException, KeyError):
         print(f"oh no! {game_data['name']} had an error!")
         return False, []
+
+
+def generate_command_failure_dictionary(message: str) -> discord.Embed:
+    pass

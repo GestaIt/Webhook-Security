@@ -73,4 +73,7 @@ def get_log_channel_id(guild_id: str, is_logging: bool) -> tuple[bool, str]:
             print(f"Failed to get log channel id for {guild_id}.")
             return False, ""
 
-        return True, log_id
+        if log_id:
+            return True, log_id[0]
+
+        return False, ""

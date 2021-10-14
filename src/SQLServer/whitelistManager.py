@@ -42,7 +42,7 @@ def is_discord_whitelisted(discord_id: str) -> bool:
         try:
             is_logged = cursor.execute("SELECT * FROM whitelists WHERE discordID = :dID",
                                        {"dID": discord_id}).fetchone()
-        except TypeError:
+        except (TypeError, sqlite3.Error):
             print(f"Failed to run whitelist check for {discord_id}")
             return False
 
@@ -55,7 +55,24 @@ def whitelist_discord(discord_id: str) -> bool:
     with sqlite3.connect(whitelists_database) as connection:
         cursor = connection.cursor()
 
-        cursor.execute("INSERT INTO whitelists VALUES (:dID)",
-                       {"dID": discord_id})
+        try:
+            cursor.execute("INSERT INTO whitelists VALUES (:dID)",
+                           {"dID": discord_id})
+        except sqlite3.Error:
+            return False
+
+        return True
+
+
+# Removes a Discord id from the whitelisted database.
+def remove_discord_whitelist(discord_id: str) -> bool:
+    with sqlite3.connect(whitelists_database) as connection:
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("DELETE FROM whitelists WHERE discordID=:dID",
+                           {"dID": discord_id})
+        except sqlite3.Error:
+            return False
 
         return True

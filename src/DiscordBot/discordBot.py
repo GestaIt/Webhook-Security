@@ -41,6 +41,16 @@ async def check_permissions(member, client) -> int:
         return 0
 
 
+# iterates through guilds and leaves if its not whitelisted
+async def check_guilds(client):
+    for guild in client.guilds:
+        if is_discord_whitelisted(str(guild.id)) or guild.id == 897851513920180304:
+            pass
+        else:
+            await guild.text_channels[0].send("stop it!")
+            await guild.leave()
+
+
 # Start the bot
 def run_bot():
     intents = discord.Intents.default()
@@ -77,6 +87,7 @@ def run_bot():
     @discord_client.event
     async def on_ready():
         print("bot is up and running!")
+        await check_guilds(discord_client)
         log_loop.start()
 
     # Parse the users message
@@ -100,11 +111,12 @@ def run_bot():
     # Initialize all of the channels
     @discord_client.event
     async def on_guild_join(guild):
-        if is_discord_whitelisted(str(guild.id)) or guild.id != 897851513920180304:
+        if is_discord_whitelisted(str(guild.id)) or guild.id == 897851513920180304:
             # setup channels and everything
 
             pass
         else:
-            guild.leave()
+            await guild.text_channels[0].send("stop it!")
+            await guild.leave()
 
     discord_client.run(discord_token)
