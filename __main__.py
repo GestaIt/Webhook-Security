@@ -1,7 +1,7 @@
 import threading
 from src.DiscordBot.discordBot import run_bot
 from src.WebServer.webServer import run_server
-from src.Roblox.modelLogger import run_queue_get
+# from src.Roblox.modelLogger import run_queue_get
 
 
 def main():
