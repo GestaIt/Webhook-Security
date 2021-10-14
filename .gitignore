@@ -1,3 +1,13 @@
+# Json Config Files
+.json
+
+# Database Files
+.db
+.sqlite
+
+# IDE Files
+.idea
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
