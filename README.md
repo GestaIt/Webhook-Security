@@ -1,7 +1,7 @@
 # Webhook Security
  A Discord webhook proxy that prevents spamming.
 
-# Initialization
+# Usage
 Download the files as a zip, and extract the main folder to your desktop, then make a JSON file in the root directory and name it 'config.json'.
 
 Inside 'config.json', make sure you have the following.
