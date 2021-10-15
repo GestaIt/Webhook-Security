@@ -64,7 +64,7 @@ def run_bot():
     async def log_loop():
         if not message_queue.empty():
             channel_id, *message_info = message_queue.get()
-            channel = discord_client.get_channel(channel_id)
+            channel = discord_client.get_channel(int(channel_id))
 
             try:
                 await channel.send(**message_info[0])

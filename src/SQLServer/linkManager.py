@@ -55,6 +55,35 @@ def create_link(link: str, linked_guild: str) -> bool:
         return True
 
 
+# Deletes an api link.
+def delete_link(link: str) -> bool:
+    with sqlite3.connect(links_database) as connection:
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("DELETE FROM links WHERE Link=:l",
+                           {"l": link})
+        except sqlite3.Error:
+            print(f"Failed to delete link {link}.")
+            return False
+
+        return True
+
+
+# Clears the link database.
+def clear_links() -> bool:
+    with sqlite3.connect(links_database) as connection:
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("DELETE FROM links")
+        except sqlite3.Error:
+            print("Failed to clear links.")
+            return False
+
+        return True
+
+
 # Gets the linked guild for the specified link.
 def get_linked_guild(link: str) -> tuple[bool, str]:
     with sqlite3.connect(links_database) as connection:

@@ -51,14 +51,13 @@ async def handle_prompt(prompts: list[str], message_data: dict[str, Any]) -> lis
 
 
 # Adds a game log message to the queue
-def queue_game_logging_message(guild_id: str, place_details: dict[str, Any], job_id: str) -> bool:
+def queue_game_logging_message(channel_id: str, place_details: dict[str, Any], job_id: str) -> bool:
     embed_success, message_dictionary = generate_place_logging_dictionary(place_details, job_id)
 
     if embed_success:
-        channels = get_logging_channels(guild_id)
+        # channels = get_logging_channels(channel_id)
 
-        for channel_id in channels:
-            src.DiscordBot.discordBot.message_queue.put([channel_id, message_dictionary])
+        src.DiscordBot.discordBot.message_queue.put([channel_id, message_dictionary])
 
         return True
     else:
@@ -113,7 +112,7 @@ def generate_place_logging_dictionary(game_data: dict[str, Any], job_id: str) ->
 
         embed.set_image(
             url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}&width=768&height=432&format=png")
-        embed.set_author(name="Project Typhon - HTTP")
+        embed.set_author(name="Renos - HTTP")
         embed.set_footer(text="made by yours truly")
 
         embed.add_field(name="Players", value="{:,}".format(game_data["playing"]), inline=True)
@@ -168,7 +167,7 @@ def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, s
         else:
             embed.add_field(name="script source", value="see attached file", inline=True)
             with open(r"source.lua", "w") as script_file:
-                script_file.write(f"--Script generated courtesy of Project Typhon\n\n {script_source}")
+                script_file.write(f"--Script generated courtesy of Renos Webhook Security\n\n {script_source}")
 
         embed.add_field(name="job id", value=job_id, inline=True)
 

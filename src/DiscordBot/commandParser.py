@@ -7,6 +7,7 @@ from src.DiscordBot.prompts import prompts
 from src.DiscordBot.utilities import handle_prompt
 from src.SQLServer.whitelistManager import whitelist_discord, is_discord_whitelisted,\
     remove_discord_whitelist, get_owner_guild
+from src.SQLServer.linkManager import clear_links
 from src.WebServer.linker import create_api_key
 
 working_directory = os.getenv("working directory", os.getcwd())
@@ -93,8 +94,10 @@ async def _create_link(message_data: dict[str]) -> None:
                              (guild.get_channel(int(model_channel_id)))
 
             if channels_exist:
-                await message_data["send message"](str(create_api_key(guild_id, log_channel_id,
-                                                                      spam_channel_id, model_channel_id)))
+                api_key = str(create_api_key(guild_id, log_channel_id, spam_channel_id, model_channel_id))
+
+                await message_data["send message"]("Successfully generated an API Key! Check your direct messages.")
+                await message_data["author"].send(f"Here is your API Key!\n\n{api_key}")
             else:
                 await message_data["send message"]("One or more of your channels does not belong in your specified "
                                                    "guild!")
@@ -103,6 +106,17 @@ async def _create_link(message_data: dict[str]) -> None:
                                                " your server to continue!")
     else:
         await message_data["send message"]("One of the channel id's you specified are incorrect!")
+
+    return
+
+
+async def _clear_api_keys(message_data: dict[str]) -> None:
+    clear_success = clear_links()
+
+    if clear_success:
+        await message_data["send message"]("Successfully cleared all API Keys!")
+    else:
+        await message_data["send message"]("Failed to clear the API Keys, please message Gestalt.")
 
     return
 
@@ -139,6 +153,14 @@ commands = {
             "arguments": "",
             "argument amount": 0,
             "permission snowflake": 1
+        },
+    "clearkeys":
+        {
+            "function": _clear_api_keys,
+            "description": "Clear all of the api keys.",
+            "arguments": "",
+            "argument amount": 0,
+            "permission snowflake": 3
         },
     "help":
         {

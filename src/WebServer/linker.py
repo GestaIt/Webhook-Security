@@ -21,12 +21,14 @@ def create_api_key(guild_id: str, log_channel: str, spam_channel: str, model_log
 def get_key_guild(key: str) -> tuple[bool, dict[str]]:
     fetch_success, guild_id = get_linked_guild(key)
 
-    if fetch_success:
+    if fetch_success and guild_id:
+        guild_id = guild_id[0]
+
         key_guild_information = {
             "guild": guild_id,
-            "game_logging_channel": get_log_channel_id(guild_id, True, False),
-            "spam_logging_channel": get_log_channel_id(guild_id, True, True),
-            "model_logging_channel": get_log_channel_id(guild_id, False, False)
+            "game_logging_channel": get_log_channel_id(guild_id, True, False)[1],
+            "spam_logging_channel": get_log_channel_id(guild_id, True, True)[1],
+            "model_logging_channel": get_log_channel_id(guild_id, False, False)[1]
         }
 
         return True, key_guild_information
