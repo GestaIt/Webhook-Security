@@ -94,10 +94,15 @@ async def _create_link(message_data: dict[str]) -> None:
                              (guild.get_channel(int(model_channel_id)))
 
             if channels_exist:
-                api_key = str(create_api_key(guild_id, log_channel_id, spam_channel_id, model_channel_id))
+                guild_fetch_success, owned_guild_id = get_owner_guild(str(message_data["author"].id))
 
-                await message_data["send message"]("Successfully generated an API Key! Check your direct messages.")
-                await message_data["author"].send(f"Here is your API Key!\n\n{api_key}")
+                if owned_guild_id == guild_id:
+                    api_key = str(create_api_key(guild_id, log_channel_id, spam_channel_id, model_channel_id))
+
+                    await message_data["send message"]("Successfully generated an API Key! Check your direct messages.")
+                    await message_data["author"].send(f"Here is your API Key!\n\n{api_key}")
+                else:
+                    await message_data["send message"]("You don't own that guild!")
             else:
                 await message_data["send message"]("One or more of your channels does not belong in your specified "
                                                    "guild!")
