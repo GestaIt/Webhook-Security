@@ -66,6 +66,22 @@ def queue_game_logging_message(channel_id: str, place_details: dict[str, Any], j
     return False
 
 
+# Adds a game log message to the queue
+def queue_spam_logging_message(channel_id: str, client_address: str, job_id: str) -> bool:
+    embed_success, message_dictionary = generate_spam_logging_dictionary(client_address, job_id)
+
+    if embed_success:
+        # channels = get_logging_channels(channel_id)
+
+        src.DiscordBot.discordBot.message_queue.put([channel_id, message_dictionary])
+
+        return True
+    else:
+        print(f"Failed generating spam embeds")
+
+    return False
+
+
 # Adds a model log message to the queue
 def queue_model_logging_message(guild_id: str, model_info: dict) -> bool:
     channel_id = get_logging_channels(guild_id)
@@ -111,7 +127,8 @@ def generate_place_logging_dictionary(game_data: dict[str, Any], job_id: str) ->
                               url=f"https://www.roblox.com/games/{str(game_data['rootPlaceId'])}/")
 
         embed.set_image(
-            url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}&width=768&height=432&format=png")
+            url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}"
+                f"&width=768&height=432&format=png")
         embed.set_author(name="Renos - HTTP")
         embed.set_footer(text="made by yours truly")
 
@@ -126,6 +143,22 @@ def generate_place_logging_dictionary(game_data: dict[str, Any], job_id: str) ->
         return True, {"embed": embed}
     except (discord.errors.HTTPException, KeyError):
         print(f"oh no! {game_data['name']} had an error!")
+        return False, []
+
+
+# Creates and returns the embeds for a spam log message
+def generate_spam_logging_dictionary(client_address: str, job_id: str) -> tuple[bool, Any]:
+    try:
+        embed = discord.Embed(title="Spam Request Hijacked", colour=discord.Colour(0xdf5dff))
+
+        embed.set_author(name="Renos - Spam")
+        embed.set_footer(text="made by yours truly")
+
+        embed.add_field(name="Client Address", value=client_address, inline=True)
+        embed.add_field(name="Job ID", value=job_id, inline=True)
+
+        return True, {"embed": embed}
+    except (discord.errors.HTTPException, KeyError):
         return False, []
 
 
@@ -155,7 +188,8 @@ def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, s
         embed = discord.Embed(title="typhon", colour=discord.Colour(0x9013fe), description="script logged!\n\n** **")
 
         embed.set_image(
-            url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}&width=768&height=432&format=png")
+            url=f"https://www.roblox.com/asset-thumbnail/image?assetId={str(game_data['rootPlaceId'])}"
+                f"&width=768&height=432&format=png")
         embed.set_footer(text="typhon script logger")
 
         embed.add_field(name="game", value=f"https://www.roblox.com/games/{str(game_data['rootPlaceId'])}/",
@@ -180,7 +214,3 @@ def generate_script_logging_dictionary(game_data: dict[str, Any], job_id: str, s
     except (discord.errors.HTTPException, KeyError):
         print(f"oh no! {game_data['name']} had an error!")
         return False, []
-
-
-def generate_command_failure_dictionary(message: str) -> discord.Embed:
-    pass
