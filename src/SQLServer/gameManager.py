@@ -51,7 +51,8 @@ def insert_guild(guild_id: str, logging_channel_id: str, spam_channel_id: str, m
 
         try:
             cursor.execute("INSERT INTO guildData VALUES (:gID, :lCI, :sCI, :mCI)",
-                           {"gID": guild_id, "lCI": logging_channel_id, "sCI": spam_channel_id, "mCI": model_logging_channel_id})
+                           {"gID": guild_id, "lCI": logging_channel_id, "sCI": spam_channel_id,
+                            "mCI": model_logging_channel_id})
         except sqlite3.Error:
             print(f"Failed to add guild {guild_id} to the database.")
             return False
@@ -65,7 +66,7 @@ def get_log_channel_id(guild_id: str, is_logging: bool, is_spam: bool) -> tuple[
         cursor = connection.cursor()
 
         try:
-            if is_logging:
+            if is_logging and not is_spam:
                 log_id = cursor.execute("SELECT LoggingChannelID FROM guildData WHERE GuildId=:gID",
                                         {"gID": guild_id}).fetchone()
             elif is_logging and is_spam:
