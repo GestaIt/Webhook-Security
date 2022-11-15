@@ -18,3 +18,5 @@ Inside 'config.json', make sure you have the following.
 ```
 
 # Licensed under 'Unlicense'
+
+DIN DIN DIN DIN
